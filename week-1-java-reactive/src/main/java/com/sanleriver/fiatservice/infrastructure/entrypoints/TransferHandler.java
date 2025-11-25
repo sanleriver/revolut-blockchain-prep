@@ -2,6 +2,8 @@ package com.sanleriver.fiatservice.infrastructure.entrypoints;
 
 import com.sanleriver.fiatservice.application.command.TransferMoneyCommand;
 import com.sanleriver.fiatservice.application.usecase.TransferMoneyUseCase;
+import com.sanleriver.fiatservice.infrastructure.entrypoints.model.TransferMoneyDTO;
+import com.sanleriver.fiatservice.infrastructure.entrypoints.model.mapper.TransferRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,14 +15,12 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TransferHandler {
     private final TransferMoneyUseCase useCase;
+    private static final TransferRestMapper mapper = new TransferRestMapper();
 
     public Mono<ServerResponse> convert(ServerRequest serverRequest) {
-        //TODO falta aquí agregar un modelo DTO para la Request y un converter al Command
-        return serverRequest.bodyToMono(TransferMoneyCommand.class)
-                .doOnNext(this::validate)
+        return serverRequest.bodyToMono(TransferMoneyDTO.class)
+                .map(mapper::toDomain)
                 .flatMap(useCase::execute)
                 .flatMap(response -> ServerResponse.ok().bodyValue(response));
     }
-
-    private void validate(@Valid TransferMoneyCommand command) {}
 }
